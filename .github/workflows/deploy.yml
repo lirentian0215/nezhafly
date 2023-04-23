@@ -1,32 +1,19 @@
 name: Fly Deploy
 on:
   push:
-  workflow_dispatch:
-  schedule:
-    - cron: '30 20 * * *'
-
-
-env:
-  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+    branches:
+      - main
 jobs:
   deploy:
     name: Deploy app
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      
-      - run: |
-          n=`date -d "1 day ago" "+%Y-%m-%d"`
-          l=`wget -qO- -t1 -T2 "https://api.github.com/repos/naiba/nezha/releases/latest" | jq -r ".published_at"`
-          if [[ $l =~ $n ]]
-          then
-               echo "new_release=yes" >> $GITHUB_ENV
-          else
-               echo "new_release=no" >> $GITHUB_ENV
-          fi
-          
-          
+      - run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
       - name: deploy
 #        if: ${{ env.new_release == 'yes'  }}
         run: |
